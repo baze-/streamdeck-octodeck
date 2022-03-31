@@ -191,7 +191,6 @@ function updateTitleText( context ){
         text += "\n" + printerStatus[context].bed + "°C";
     }
 
-    // console.log( "Display text[" + text + "]" );
     octoDeckAction.SetTitle(context, text );
 }
 
@@ -257,7 +256,7 @@ function getData(settings, context) {
     fetch(settings.octoUrl + "/api/printer", {
         headers: { 'X-Api-Key': settings.octoKey}
     })
-    .then( /*res => res.json()*/
+    .then(
         (res)=>{
             // If request succeeded, then return as json. Otherwise throw error (usually 404, 409 or similar).
             if(res.ok) {
@@ -288,27 +287,6 @@ function getData(settings, context) {
             }
         }
     )
-/*    .then((out) => {
-        console.log('Received printerJSON[',context,']', out);
-
-        // Get hotend temperature
-        if ( out.temperature && out.temperature.tool0 && out.temperature.tool0.actual) {
-            printerStatus[context].hotend = Math.floor(out.temperature.tool0.actual);
-        }
-
-        // Get bed temperature
-        if ( out.temperature && out.temperature.bed && out.temperature.bed.actual) {
-            printerStatus[context].bed = Math.floor(out.temperature.bed.actual);
-        }
-
-        console.log('PrinterStatus[',context,']', printerStatus[context]);
-
-        // Update button
-        octoDeckAction.SetImage(context, background[settings.octoBackground]);
-        updateTitleText( context );
-    })
-
- */
     .catch(err => {
         console.log('Invalid API Response Error');
 
