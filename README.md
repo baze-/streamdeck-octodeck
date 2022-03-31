@@ -1,6 +1,13 @@
-# StreamDeck Plugin for OctoPrint
+# Fixed StreamDeck Plugin for OctoPrint
 
-This plugin shows your 3D-Printer completion state in percent on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
+This plugin is based on original https://github.com/cpeuschel/streamdeck-octodeck plugin with few bug fixes and tweaks.
+
+- Bugs fixed: Now supports multible instances of the tile if you are controlling multible octoprints.
+- Features: Added 10 second option as I felt 30sec wasn't fast enough.
+
+## 
+
+shows your 3D-Printer completion state in percent on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
 
 ## Installation
 Download the latest release. Double click on the file `com.cpeuschel.octodeck.streamDeckPlugin` to install.
