@@ -188,11 +188,11 @@ function getData(settings, context) {
         if (out.state.search("Operational") >= 0 && out.progress.completion) {
             result = Math.floor(out.progress.completion) + "%"
         } else if (out.state.search("Operational") >= 0) {
-            result = "rdy"
+            result = "On"
         } else if (out.state.search("Cancelling") >= 0) {
-            result = "cncl"
+            result = "Cancel"
         } else if (out.state.search("Offline") >= 0) {
-            result = "off"
+            result = "Off"
         } else {
             result = Math.floor(out.progress.completion) + "%"
         }
