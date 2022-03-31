@@ -1,9 +1,10 @@
 # Fixed StreamDeck Plugin for OctoPrint
 
-This plugin is based on original https://github.com/cpeuschel/streamdeck-octodeck plugin with few bug fixes and tweaks.
+This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin but with new features, tweaks and bug fixes.
 
-- Bugs fixed: Now supports multible instances of the tile if you are controlling multible octoprints.
-- Features: Added 10 second option as I felt 30sec wasn't fast enough.
+- **New features**: Temperatures are shown on buttons.
+- **New features**: Added 10 second option as I felt 30sec wasn't fast enough.
+- **Bugs fixed**: Now supports multible instances of the tile if you are controlling multible octoprints.
 
 ## 
 
@@ -27,15 +28,7 @@ Download the latest release. Double click on the file `com.cpeuschel.octodeck.st
 Click the icon on your StreamDeck to update the completion. Automatic update time which you are using in the configuration
 
 ## Available States
-- `rdy` => the printer is connected and is ready to print
-
-    ![rdy.png](readme/rdy.png)
-- `off` => the printer is not connected with OctoPrint
-
-    ![off.png](readme/off.png)
-- `cncl` => print is canceling
-  
-    ![img.png](readme/cncl.png)
-- `%` => Completion in percent  
-
-    ![img.png](readme/percent.png)
+- `On` => the printer is connected and is ready to print
+- `Off` => the printer is not connected with OctoPrint
+- `Cancel` => print is canceling
+- `20 %, 210°C, 50°C` Completion in percent, hotend temperature and bed temperature.
