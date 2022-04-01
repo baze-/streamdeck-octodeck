@@ -6,6 +6,11 @@ This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin 
 - **New features**: Added 10 second option as I felt 30sec wasn't fast enough.
 - **Bugs fixed**: Now supports multible instances of the tile if you are controlling multible octoprints.
 
+![example_off.png](readme/example_off.png)
+![example_on_preheated.png](readme/example_on_preheated.png)
+![example_printer_cooling_down.png](readme/example_printer_cooling_down.png)
+![example_printing.png](readme/example_printing.png)
+
 ## 
 
 shows your 3D-Printer completion state in percent on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
