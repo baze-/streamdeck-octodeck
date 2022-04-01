@@ -1,19 +1,20 @@
-# Fixed StreamDeck Plugin for OctoPrint
+# StreamDeck Plugin for OctoPrint (fixed 2.0)
+
+shows your 3D-Printer completion state in percent on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
 
 This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin but with new features, tweaks and bug fixes.
 
-- **New features**: Temperatures are shown on buttons.
-- **New features**: Added 10 second option as I felt 30sec wasn't fast enough.
-- **Bugs fixed**: Now supports multible instances of the tile if you are controlling multible octoprints.
+## Changes compared to original repository:
+- **New feature**: Temperatures are shown on buttons.
+- **New feature**: Added 10 second option as I felt 30sec wasn't fast enough.
+- **Bug fixed**: Now supports multible instances of the tile if you are controlling multible octoprints.
+- **Bug fixed**: Buttons information didn't always update. Fixed it and now they should always update when visible on Stream Deck.
 
-![example_off.png](readme/example_off.png)
-![example_on_preheated.png](readme/example_on_preheated.png)
-![example_printer_cooling_down.png](readme/example_printer_cooling_down.png)
-![example_printing.png](readme/example_printing.png)
+## Examples how it looks
 
-## 
-
-shows your 3D-Printer completion state in percent on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
+| Printer is offline  | Printer is preheated, <br/> not printing yet. | Printer is printing. | Print done. |
+| ------------- | ------------- | ------------- | ------------- | 
+| ![Printer is offline](readme/example_off.png)  | ![example_on_preheated.png](readme/example_on_preheated.png)  | ![example_printing.png](readme/example_printing.png) | ![example_printer_cooling_down.png](readme/example_printer_cooling_down.png) |
 
 ## Installation
 Download the latest release. Double click on the file `com.cpeuschel.octodeck.streamDeckPlugin` to install.
