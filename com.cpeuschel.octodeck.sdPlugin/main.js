@@ -91,6 +91,14 @@ var octoDeckAction    = {
         if (timer != null) {
             clearInterval(timer);
         }
+
+        // Recreate timer for this context with new settings.
+        timers[context] = setInterval(function() {
+            getData(settingsCache[context], context);
+        }, settings.octoInterval * 1000);
+
+
+
     },
 
     showAlert: function (context) {
@@ -160,6 +168,8 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
                 octoDeckAction.SetSettings(context, jsonPayload['settings']);
             }
         }
+
+        updateTitleText( context );
     };
 
     websocket.onclose = function () {
@@ -171,10 +181,12 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
 function updateTitleText( context ){
     let text = "";
     if ( printerStatus[context].status == "on" ){
-        if ( printerStatus[context].progress == null ){
-            text = "On";
-        } else {
-            text = printerStatus[context].progress + "%";
+        if ( printerStatus[context].progress ){
+            if  printerStatus[context].progress == null ){
+                text = "On";
+            } else {
+                text = printerStatus[context].progress + "%";
+            }
         }
     } else if ( printerStatus[context].status == "cancel" ) {
         text = "Cancel";
@@ -233,6 +245,10 @@ function getData(settings, context) {
 
             printerStatus[context].status = "off";
             printerStatus[context].progress = null;
+
+            // Reset if off
+            printerStatus[context].hotend = null;
+            printerStatus[context].bed = null;
         } else {
             result = Math.floor(out.progress.completion) + "%"
 
@@ -256,30 +272,11 @@ function getData(settings, context) {
     fetch(settings.octoUrl + "/api/printer", {
         headers: { 'X-Api-Key': settings.octoKey}
     })
-    .then(
-        (res)=>{
+    .then((res)=>{
             // If request succeeded, then return as json. Otherwise throw error (usually 404, 409 or similar).
             if(res.ok) {
                 // return res.json();
-                let out = res.json();
-
-                console.log('Received printerJSON[',context,']', out);
-
-                // Get hotend temperature
-                if ( out.temperature && out.temperature.tool0 && out.temperature.tool0.actual) {
-                    printerStatus[context].hotend = Math.floor(out.temperature.tool0.actual);
-                }
-
-                // Get bed temperature
-                if ( out.temperature && out.temperature.bed && out.temperature.bed.actual) {
-                    printerStatus[context].bed = Math.floor(out.temperature.bed.actual);
-                }
-
-                console.log('PrinterStatus[',context,']', printerStatus[context]);
-
-                // Update button
-                octoDeckAction.SetImage(context, background[settings.octoBackground]);
-                updateTitleText( context );
+                return res.json();
             } else if (res.status == 409){
                 console.log('Getting printer status failed. Printer probably powered off and not connected to octoprint. This is ok.');
             } else {
@@ -287,6 +284,26 @@ function getData(settings, context) {
             }
         }
     )
+    .then((out) => {
+
+        console.log('Received printerJSON[',context,']', out);
+
+        // Get hotend temperature
+        if ( out.temperature && out.temperature.tool0 && out.temperature.tool0.actual) {
+            printerStatus[context].hotend = Math.floor(out.temperature.tool0.actual);
+        }
+
+        // Get bed temperature
+        if ( out.temperature && out.temperature.bed && out.temperature.bed.actual) {
+            printerStatus[context].bed = Math.floor(out.temperature.bed.actual);
+        }
+
+        console.log('PrinterStatus[',context,']', printerStatus[context]);
+
+        // Update button
+        octoDeckAction.SetImage(context, background[settings.octoBackground]);
+        updateTitleText( context );
+    })
     .catch(err => {
         console.log('Invalid API Response Error');
 
