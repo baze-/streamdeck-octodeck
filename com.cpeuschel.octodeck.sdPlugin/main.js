@@ -182,7 +182,7 @@ function updateTitleText( context ){
     let text = "";
     if ( printerStatus[context].status == "on" ){
         if ( printerStatus[context].progress ){
-            if  printerStatus[context].progress == null ){
+            if( printerStatus[context].progress == null ){
                 text = "On";
             } else {
                 text = printerStatus[context].progress + "%";
