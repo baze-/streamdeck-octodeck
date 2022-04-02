@@ -229,6 +229,13 @@ function fetchPrinterJobStatus( context, settings ){
                 printerStatus[context].progress = Math.floor(out.progress.completion);
                 printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft);
                 printerStatus[context].filename = out.job.file.display;
+
+                let width = Math.floor(printerStatus[context].progress/100*110); // Scale percent progress to 120px width.
+                let img = 'data:image/svg+xml;charset=utf8,<svg height="144" width="144"><rect x="17" y="5" width="'+width+'" height="10" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" /><rect x="17" y="5" width="110" height="10" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" /></svg>';
+
+                console.log(img);
+                octoDeckAction.SetImage(context, img);
+
             } else if (out.state == "Operational" ) {
                 console.log ("on...");
                 printerStatus[context].status = "on";
@@ -252,13 +259,13 @@ function fetchPrinterJobStatus( context, settings ){
             } else {
                 // Printer is on, but not printing.
                 printerStatus[context].status = "on";
-                printerStatus[context].progress = Math.floor(out.progress.completion);
-                printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft);
+                printerStatus[context].progress = null;
+                printerStatus[context].timeRemaining = null;
                 printerStatus[context].filename = out.job.file.display;
             }
 
             // Update button
-            octoDeckAction.SetImage(context, background[settings.octoBackground]);
+            //octoDeckAction.SetImage(context, background[settings.octoBackground]);
             updateTitleText( context );
 
             console.log('PrinterStatus[',context,']', printerStatus[context]);
@@ -307,7 +314,7 @@ function fetchPrinterTemperatures(  context, settings ){
             console.log('PrinterStatus[',context,']', printerStatus[context]);
 
             // Update button
-            octoDeckAction.SetImage(context, background[settings.octoBackground]);
+            //octoDeckAction.SetImage(context, background[settings.octoBackground]);
             updateTitleText( context );
         })
         .catch(err => {
