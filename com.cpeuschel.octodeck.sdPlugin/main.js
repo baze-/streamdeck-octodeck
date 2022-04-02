@@ -179,38 +179,33 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
 function updateTitleText( context ){
     let text = "";
 
+    // Filename to first line
     if ( printerStatus[context].filename == null ){
         text += "";
     } else {
         text += printerStatus[context].filename.substring(0, 8) + "\n";
     }
 
-    if ( printerStatus[context].status && printerStatus[context].status == "on" ){
-        if ( printerStatus[context].progress ){
-            if( printerStatus[context].progress == null ){
-                // Printer is on but not printing
-                text = "On";
-            } else {
-                // Printer is printing. Show progress percentage and time.
-                text += printerStatus[context].progress + "% ";
-                text += Math.floor(printerStatus[context].timeRemaining/60)+"min";
-            }
-        } else {
-            // Printer is on but not printing
+    // Printer status to SECOND line
+    if ( printerStatus[context].status ){
+
+        if ( printerStatus[context].status == "printing" ){
+            // Printer is printing. Show progress percentage and time.
+            text += printerStatus[context].progress + "% ";
+            text += Math.floor(printerStatus[context].timeRemaining/60)+"min";
+        } else if ( printerStatus[context].status == "on" ) {
             text = "On";
+        } else if ( printerStatus[context].status == "cancel" ) {
+            text = "Cancel";
+        } else if ( printerStatus[context].status == "off" ) {
+            text =  "Off" ;
         }
-    } else if ( printerStatus[context].status == "cancel" ) {
-        text = "Cancel";
-    } else if ( printerStatus[context].status == "off" ) {
-        text =  "Off" ;
     }
 
-    // Temperatures to next line
+    // Temperatures to THIRD line
     if ( printerStatus[context].hotend != null && printerStatus[context].bed != null ){
         text += "\n" + printerStatus[context].hotend + "/" + printerStatus[context].bed + " °C";
     }
-
-    console.log(text);
 
     octoDeckAction.SetTitle(context, text );
 }
@@ -226,24 +221,26 @@ function fetchPrinterJobStatus( context, settings ){
             octoDeckAction.showAlert(context);
         })
         .then((out) => {
-            console.log('Received JSON[',context,']', out);
+            console.log('Received jobJSON[',out.state,']',context,']', out);
 
-            if (out.state.search("Operational") >= 0 && out.progress.completion) {
+            if (out.state == "Printing" ) {
+                console.log ("printing...");
                 printerStatus[context].status = "printing";
                 printerStatus[context].progress = Math.floor(out.progress.completion);
                 printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft);
                 printerStatus[context].filename = out.job.file.display;
-            } else if (out.state.search("Operational") >= 0) {
+            } else if (out.state == "Operational" ) {
+                console.log ("on...");
                 printerStatus[context].status = "on";
                 printerStatus[context].progress = null;
                 printerStatus[context].timeRemaining = null;
                 printerStatus[context].filename = out.job.file.display;
-            } else if (out.state.search("Cancelling") >= 0) {
+            } else if (out.state == "Cancelling" ) {
                 printerStatus[context].status = "cancel";
                 printerStatus[context].progress = null;
                 printerStatus[context].timeRemaining = null;
                 printerStatus[context].filename = out.job.file.display;
-            } else if (out.state.search("Offline") >= 0) {
+            } else if (out.state.search( "Offline" >= 0)) {
                 printerStatus[context].status = "off";
 
                 // Reset if offline
@@ -274,7 +271,55 @@ function fetchPrinterJobStatus( context, settings ){
 
 }
 
-function fetchPrinterTemperatures(){
+function fetchPrinterTemperatures(  context, settings ){
+
+    // ### MAKE another request for getting the printers temperatures ###
+    fetch(settings.octoUrl + "/api/printer", {
+        headers: { 'X-Api-Key': settings.octoKey}
+    })
+        .then((res)=>{
+                // If request succeeded, then return as json. Otherwise throw error (usually 404, 409 or similar).
+                if(res.ok) {
+                    // return res.json();
+                    return res.json();
+                } else if (res.status == 409){
+                    console.log('Getting printer status failed. Printer probably powered off and not connected to octoprint. This is ok.');
+                    throw new Error("Printer offline :" + res.status);
+                } else {
+                    throw new Error("Status code error :" + res.status);
+                }
+            }
+        )
+        .then((out) => {
+
+            console.log('Received printerJSON[',context,']', out);
+
+            // Get hotend temperature
+            if ( out.temperature && out.temperature.tool0 && out.temperature.tool0.actual) {
+                printerStatus[context].hotend = Math.floor(out.temperature.tool0.actual);
+            }
+
+            // Get bed temperature
+            if ( out.temperature && out.temperature.bed && out.temperature.bed.actual) {
+                printerStatus[context].bed = Math.floor(out.temperature.bed.actual);
+            }
+
+            console.log('PrinterStatus[',context,']', printerStatus[context]);
+
+            // Update button
+            octoDeckAction.SetImage(context, background[settings.octoBackground]);
+            updateTitleText( context );
+        })
+        .catch(err => {
+            console.log('Invalid API Response Error');
+
+            // Its ok to get 409 from /api/printer. We dont want to show alert.
+            // octoDeckAction.showAlert(context);
+
+            // Reset if request failed.
+            printerStatus[context].hotend = null;
+            printerStatus[context].bed = null;
+        })
 
 }
 
@@ -284,57 +329,13 @@ function getData(settings, context) {
         return;
     }
 
-    // ### Make first request to get printers job status progress (and printers status ###
+    // ## Make first request to get printers job status progress (and printers status ###
     fetchPrinterJobStatus( context, settings);
 
+    // Make second request to get printers temperatures.
+    fetchPrinterTemperatures(  context, settings );
 
-    // ### MAKE another request for getting the printers temperatures ###
-    fetch(settings.octoUrl + "/api/printer", {
-        headers: { 'X-Api-Key': settings.octoKey}
-    })
-    .then((res)=>{
-            // If request succeeded, then return as json. Otherwise throw error (usually 404, 409 or similar).
-            if(res.ok) {
-                // return res.json();
-                return res.json();
-            } else if (res.status == 409){
-                console.log('Getting printer status failed. Printer probably powered off and not connected to octoprint. This is ok.');
-                throw new Error("Printer offline :" + res.status);
-            } else {
-             throw new Error("Status code error :" + res.status);
-            }
-        }
-    )
-    .then((out) => {
 
-        console.log('Received printerJSON[',context,']', out);
-
-        // Get hotend temperature
-        if ( out.temperature && out.temperature.tool0 && out.temperature.tool0.actual) {
-            printerStatus[context].hotend = Math.floor(out.temperature.tool0.actual);
-        }
-
-        // Get bed temperature
-        if ( out.temperature && out.temperature.bed && out.temperature.bed.actual) {
-            printerStatus[context].bed = Math.floor(out.temperature.bed.actual);
-        }
-
-        console.log('PrinterStatus[',context,']', printerStatus[context]);
-
-        // Update button
-        octoDeckAction.SetImage(context, background[settings.octoBackground]);
-        updateTitleText( context );
-    })
-    .catch(err => {
-        console.log('Invalid API Response Error');
-
-        // Its ok to get 409 from /api/printer. We dont want to show alert.
-        // octoDeckAction.showAlert(context);
-
-        // Reset if request failed.
-        printerStatus[context].hotend = null;
-        printerStatus[context].bed = null;
-    })
 }
 
 function parseJson (jsonString) {
