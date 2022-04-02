@@ -7,22 +7,22 @@
                 {
                     "Image": "resources/actionDefaultImage",
                     "TitleAlignment": "middle",
-                    "FontSize": "18"
+                    "FontSize": "9"
                 }
             ],
             "SupportedInMultiActions": false,
-            "Tooltip": "This plugin shows your 3D-Printer completion state in percent on your StreamDeck (OctoPrint required)",
+            "Tooltip": "This plugin shows your 3D-Printer completion state in percent and printer temperatures on your StreamDeck (OctoPrint required).",
             "UUID": "com.cpeuschel.octodeck"
         }
     ],
     "SDKVersion": 2,
     "Author": "Christian Peuschel",
     "CodePath": "main.html",
-    "Description": "StreamDeck Plugin for OctoPrint - Show the percent of your current print",
+    "Description": "StreamDeck Plugin for OctoPrint - Show the percent and temperatures of your current print",
     "Name": "OctoDeck",
     "Icon": "resources/pluginIcon",
     "PropertyInspectorPath": "propertyinspector.html",
-    "Version": "1.1.0",
+    "Version": "2.0.0",
     "OS": [
         {
             "Platform": "mac",

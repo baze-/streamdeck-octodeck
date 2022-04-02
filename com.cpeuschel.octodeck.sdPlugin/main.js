@@ -27,26 +27,19 @@ var octoDeckAction    = {
         printerStatus[context] = {}; // Create empty status. This will be updated by rest requests.
         getData(settingsCache[context], context);
 
-		// If timer is set, then clear it. (It will be created again soom.)
-        let timer = timers[context];
-        if (timer != null) {
-            clearInterval(timer);
-        }
-
-		// Create timer for this context. (having timers associated with context enables multible instances to exist.)
-        timers[context] = setInterval(function() {
-            getData(settingsCache[context], context);
-        }, settings.octoInterval * 1000);
+        // Start timer when this plugin becomes visible.
+        resetTimer(context, settings);
     },
 
     onWillDisappear: function (context, settings, coordinates) {
         console.log("onWillDisappear context: ", context, " settings: ", settings);
 
-		// If timer is set, then clear it.
+/*		// If timer is set, then clear it.
         let timer = timers[context];
         if (timer != null) {
             clearInterval(timer);
         }
+ */
     },
 
     SetTitle: function (context, titleText) {
@@ -87,18 +80,9 @@ var octoDeckAction    = {
         console.log("New Settings", settings);
         console.log("New JSON", JSON.stringify(json));
         octoDeckAction.SetImage(context, background[settings.octoBackground]);
-        let timer = timers[context];
-        if (timer != null) {
-            clearInterval(timer);
-        }
 
-        // Recreate timer for this context with new settings.
-        timers[context] = setInterval(function() {
-            getData(settingsCache[context], context);
-        }, settings.octoInterval * 1000);
-
-
-
+        // Start timer when new settings are received.
+        resetTimer(context, settings);
     },
 
     showAlert: function (context) {
@@ -109,6 +93,20 @@ var octoDeckAction    = {
         websocket.send(JSON.stringify(json));
     },
 };
+
+// Helper function for resetting internal timer
+function resetTimer(context, settings){
+    // If timer is set, then clear it. (It will be created again soom.)
+    let timer = timers[context];
+    if (timer != null) {
+        clearInterval(timer);
+    }
+
+    // Create timer for this context. (having timers associated with context enables multible instances to exist.)
+    timers[context] = setInterval(function() {
+        getData(settingsCache[context], context);
+    }, settings.octoInterval * 1000);
+}
 
 function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, inInfo) {
     pluginUUID = inPluginUUID
@@ -180,13 +178,26 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
 // Helper function to determine how text should be written to button.
 function updateTitleText( context ){
     let text = "";
-    if ( printerStatus[context].status == "on" ){
+
+    if ( printerStatus[context].filename == null ){
+        text += "";
+    } else {
+        text += printerStatus[context].filename.substring(0, 8) + "\n";
+    }
+
+    if ( printerStatus[context].status && printerStatus[context].status == "on" ){
         if ( printerStatus[context].progress ){
             if( printerStatus[context].progress == null ){
+                // Printer is on but not printing
                 text = "On";
             } else {
-                text = printerStatus[context].progress + "%";
+                // Printer is printing. Show progress percentage and time.
+                text += printerStatus[context].progress + "% ";
+                text += Math.floor(printerStatus[context].timeRemaining/60)+"min";
             }
+        } else {
+            // Printer is on but not printing
+            text = "On";
         }
     } else if ( printerStatus[context].status == "cancel" ) {
         text = "Cancel";
@@ -194,16 +205,77 @@ function updateTitleText( context ){
         text =  "Off" ;
     }
 
-    // Temperatures printed to next line
-    if ( printerStatus[context].hotend != null ){
-        text += "\n" + printerStatus[context].hotend + "°C";
+    // Temperatures to next line
+    if ( printerStatus[context].hotend != null && printerStatus[context].bed != null ){
+        text += "\n" + printerStatus[context].hotend + "/" + printerStatus[context].bed + " °C";
     }
 
-    if ( printerStatus[context].bed != null ){
-        text += "\n" + printerStatus[context].bed + "°C";
-    }
+    console.log(text);
 
     octoDeckAction.SetTitle(context, text );
+}
+
+function fetchPrinterJobStatus( context, settings ){
+
+    fetch(settings.octoUrl + "/api/job", {
+        headers: { 'X-Api-Key': settings.octoKey}
+    })
+        .then(res => res.json())
+        .catch(err => {
+            console.log('Invalid API Response Error');
+            octoDeckAction.showAlert(context);
+        })
+        .then((out) => {
+            console.log('Received JSON[',context,']', out);
+
+            if (out.state.search("Operational") >= 0 && out.progress.completion) {
+                printerStatus[context].status = "printing";
+                printerStatus[context].progress = Math.floor(out.progress.completion);
+                printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft);
+                printerStatus[context].filename = out.job.file.display;
+            } else if (out.state.search("Operational") >= 0) {
+                printerStatus[context].status = "on";
+                printerStatus[context].progress = null;
+                printerStatus[context].timeRemaining = null;
+                printerStatus[context].filename = out.job.file.display;
+            } else if (out.state.search("Cancelling") >= 0) {
+                printerStatus[context].status = "cancel";
+                printerStatus[context].progress = null;
+                printerStatus[context].timeRemaining = null;
+                printerStatus[context].filename = out.job.file.display;
+            } else if (out.state.search("Offline") >= 0) {
+                printerStatus[context].status = "off";
+
+                // Reset if offline
+                printerStatus[context].progress = null;
+                printerStatus[context].timeRemaining = null;
+                printerStatus[context].hotend = null;
+                printerStatus[context].bed = null;
+                printerStatus[context].filename = null;
+            } else {
+                // Printer is on, but not printing.
+                printerStatus[context].status = "on";
+                printerStatus[context].progress = Math.floor(out.progress.completion);
+                printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft);
+                printerStatus[context].filename = out.job.file.display;
+            }
+
+            // Update button
+            octoDeckAction.SetImage(context, background[settings.octoBackground]);
+            updateTitleText( context );
+
+            console.log('PrinterStatus[',context,']', printerStatus[context]);
+        })
+        .catch(err => {
+            console.log('Invalid JSON Parsing Error');
+            octoDeckAction.showAlert(context);
+            printerStatus[context].status = "";
+        });
+
+}
+
+function fetchPrinterTemperatures(){
+
 }
 
 function getData(settings, context) {
@@ -213,59 +285,7 @@ function getData(settings, context) {
     }
 
     // ### Make first request to get printers job status progress (and printers status ###
-    fetch(settings.octoUrl + "/api/job", {
-      headers: { 'X-Api-Key': settings.octoKey}
-    })
-    .then(res => res.json())
-    .catch(err => {
-        console.log('Invalid API Response Error');
-        octoDeckAction.showAlert(context);
-    })
-    .then((out) => {
-        console.log('Received JSON[',context,']', out);
-
-        if (out.state.search("Operational") >= 0 && out.progress.completion) {
-            result = Math.floor(out.progress.completion) + "%"
-
-            printerStatus[context].status = "on";
-            printerStatus[context].progress = Math.floor(out.progress.completion);
-        } else if (out.state.search("Operational") >= 0) {
-            result = "On"
-
-            printerStatus[context].status = "on";
-            printerStatus[context].progress = null;
-        } else if (out.state.search("Cancelling") >= 0) {
-            result = "Cancel"
-
-            printerStatus[context].status = "cancel";
-            printerStatus[context].progress = null;
-
-        } else if (out.state.search("Offline") >= 0) {
-            result = "Off"
-
-            printerStatus[context].status = "off";
-            printerStatus[context].progress = null;
-
-            // Reset if off
-            printerStatus[context].hotend = null;
-            printerStatus[context].bed = null;
-        } else {
-            result = Math.floor(out.progress.completion) + "%"
-
-            printerStatus[context].status = "on";
-            printerStatus[context].progress = Math.floor(out.progress.completion);
-        }
-
-        // Update button
-        octoDeckAction.SetImage(context, background[settings.octoBackground]);
-        updateTitleText( context );
-
-        console.log('PrinterStatus[',context,']', printerStatus[context]);
-    })
-    .catch(err => {
-        console.log('Invalid JSON Parsing Error');
-        octoDeckAction.showAlert(context);
-    });
+    fetchPrinterJobStatus( context, settings);
 
 
     // ### MAKE another request for getting the printers temperatures ###
@@ -279,6 +299,7 @@ function getData(settings, context) {
                 return res.json();
             } else if (res.status == 409){
                 console.log('Getting printer status failed. Printer probably powered off and not connected to octoprint. This is ok.');
+                throw new Error("Printer offline :" + res.status);
             } else {
              throw new Error("Status code error :" + res.status);
             }
@@ -307,7 +328,7 @@ function getData(settings, context) {
     .catch(err => {
         console.log('Invalid API Response Error');
 
-            // Its ok to get 409 from /api/printer. We dont want to show alert.
+        // Its ok to get 409 from /api/printer. We dont want to show alert.
         // octoDeckAction.showAlert(context);
 
         // Reset if request failed.
