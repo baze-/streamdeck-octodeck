@@ -12,9 +12,9 @@ This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin 
 
 ## Examples how it looks
 
-| Printer is offline  | Printer is on. <br/> Not printing yet. | Printer is printing. |
+| Printer is offline  | Printer is on. <br/> Heating up. | Printing. |
 | ------------- | ------------- | ------------- |
-| ![Printer is offline](readme/example_off.png)  | ![example_on_preheated.png](readme/example_on_preheated.png)  | ![example_printing.png](readme/example_prgress_bar_41.png) |
+| ![Printer is offline](readme/example_off.png)  | ![example_on_heating.png](readme/example_on_heating.png)  | ![example_printing.png](readme/example_prgress_bar_41.png) |
 
 ## Installation
 Download the latest release. Double click on the file `com.cpeuschel.octodeck.streamDeckPlugin` to install.
