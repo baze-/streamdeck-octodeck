@@ -194,7 +194,11 @@ function updateTitleText( context ){
             text += printerStatus[context].progress + "% ";
             text += Math.floor(printerStatus[context].timeRemaining/60)+"min";
         } else if ( printerStatus[context].status == "on" ) {
-            text = "On";
+
+            // If
+            if ( printerStatus[context].hotend - printerStatus[context].hotendTarget <= -10 ) text = "Heating";
+            else if ( printerStatus[context].hotend - printerStatus[context].hotendTarget >= 10 ) text = "Cooling";
+            else text = "On";
         } else if ( printerStatus[context].status == "cancel" ) {
             text = "Cancel";
         } else if ( printerStatus[context].status == "off" ) {
@@ -232,7 +236,7 @@ function fetchPrinterJobStatus( context, settings ){
 
                 // Draw dynamic progress bar to button
                 let width = Math.floor(printerStatus[context].progress/100*110); // Scale percent progress to 120px width.
-                let img = 'data:image/svg+xml;charset=utf8,<svg height="144" width="144"><rect x="17" y="5" width="'+width+'" height="10" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" /><rect x="17" y="5" width="110" height="10" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" /></svg>';
+                let img = 'data:image/svg+xml;charset=utf8,<svg height="144" width="144"><rect x="17" y="8" width="'+width+'" height="10" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" /><rect x="17" y="8" width="110" height="10" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" /></svg>';
                 octoDeckAction.SetImage(context, img);
 
             } else if (out.state == "Operational" ) {
@@ -308,11 +312,13 @@ function fetchPrinterTemperatures(  context, settings ){
             // Get hotend temperature
             if ( out.temperature && out.temperature.tool0 && out.temperature.tool0.actual) {
                 printerStatus[context].hotend = Math.floor(out.temperature.tool0.actual);
+                printerStatus[context].hotendTarget = Math.floor(out.temperature.tool0.target);
             }
 
             // Get bed temperature
             if ( out.temperature && out.temperature.bed && out.temperature.bed.actual) {
                 printerStatus[context].bed = Math.floor(out.temperature.bed.actual);
+                printerStatus[context].bedTarget = Math.floor(out.temperature.bed.target);
             }
 
             console.log('PrinterStatus[',context,']', printerStatus[context]);
