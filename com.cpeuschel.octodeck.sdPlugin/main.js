@@ -199,7 +199,7 @@ function updateTitleText( context ) {
 
     // Show filename
     if ( printerStatus[context].filename != null && printerStatus[context].filename.length > 4 )
-    img += '<text x="6" y="45" fill="white" text-anchor="begin">' +
+    img += '<text x="6" y="47" fill="white" text-anchor="begin">' +
         '   <tspan font-size="23">' + printerStatus[context].filename.substring(0, 11) + '</tspan>' +
         '</text>';
 
@@ -227,8 +227,8 @@ function updateTitleText( context ) {
             }
 
             if ( printerStatus[context].status == "printing" ){
-                    img += '<text x="5" y="82" fill="white" text-anchor="begin"> <tspan font-size="35">' + printerStatus[context].progress + '</tspan><tspan dy="-8" font-size="20" fill="rgb(200,200,200">%</tspan> </text>';
-                    img += '<text x="135" y="82" fill="white" text-anchor="end"> <tspan dx="5" font-size="30">' + printerStatus[context].timeRemaining + '</tspan><tspan dy="0" font-size="20" fill="rgb(200,200,200">min</tspan> </text>';
+                    img += '<text x="5" y="84" fill="white" text-anchor="begin"> <tspan font-size="35">' + printerStatus[context].progress + '</tspan><tspan dy="-8" font-size="20" fill="rgb(200,200,200">%</tspan> </text>';
+                    img += '<text x="135" y="84" fill="white" text-anchor="end"> <tspan dx="5" font-size="30">' + printerStatus[context].timeRemaining + '</tspan><tspan dy="0" font-size="20" fill="rgb(200,200,200">min</tspan> </text>';
             }
 
         } else if ( printerStatus[context].status == "cancel" ) {
