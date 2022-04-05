@@ -1,8 +1,8 @@
-# StreamDeck Plugin for OctoPrint (fixed 2.0)
+# Graphical StreamDeck Plugin for OctoPrint
 
-shows your 3D-Printer completion state in percent on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
+Shows your 3D-Printer state, progress and temperatures on your StreamDeck ([OctoPrint](https://github.com/OctoPrint/OctoPrint) required)
 
-This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin but has been basically rewritten to support graphical elements, new features, and several bug fixes.
+This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin but has been basically rewritten to support graphical elements, new features, and several bugs fixed.
 
 ## Changes compared to original repository:
 - **New feature**: "Heating/Cooling" text shown when printer is heating up or cooling down. Also up/down arrow is shown next to temperatures to indicate this.
