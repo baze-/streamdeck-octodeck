@@ -21,9 +21,11 @@ This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin 
  
  ![Printer is heating](readme/example_on_heating.png) Printer is heating
  
- ![Printer is printing](readme/example_prgress_bar_0.png) Starting to print. Progress % and remaining print time shown. (Heating up symbol shown as the print is just starting up.)
+ ![Printer is printing](readme/example_prgress_bar_0.png) Starting to print. <br />
+ Progress % and remaining print time shown. (Heating up symbol shown as the print is just starting up.)
  
- ![Printer is printing](readme/example_printing.png) Printer is printing. Progress bar shown on top. Progress % and remaining print time shown.
+ ![Printer is printing](readme/example_printing.png) Printer is printing. <br />
+ Progress bar shown on top. Progress % and remaining print time shown.
  
  ![Printer is cancelling](readme//example_on_cancelling.png) Print has been cancelled.
  
@@ -39,12 +41,3 @@ Download the latest release. Double click on the file `com.cpeuschel.octodeck.st
 4. Choose your favourite background color
 
     ![configuration.png](readme/configuration.png)
-
-## Use
-Click the icon on your StreamDeck to update the completion. Automatic update time which you are using in the configuration
-
-## Available States
-- `On` => the printer is connected and is ready to print
-- `Off` => the printer is not connected with OctoPrint
-- `Cancel` => print is canceling
-- `20 %, 210°C, 50°C` Completion in percent, hotend temperature and bed temperature.
