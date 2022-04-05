@@ -17,12 +17,18 @@ This plugin is based on https://github.com/cpeuschel/streamdeck-octodeck plugin 
 
  ![Printer is offline](readme/example_printer_off.png) Printer is offline
  
- ![Printer is on](readme/example_on_preheated.png) Printer is on
+ ![Printer is on](readme/example_on_preheated.png) Printer is on. Selected filename shown in top row.
  
  ![Printer is heating](readme/example_on_heating.png) Printer is heating
  
- ![Printer is printing](readme/example_prgress_bar_0.png) Printer is printing. Progress % and remaining print time shown.
-
+ ![Printer is printing](readme/example_prgress_bar_0.png) Starting to print. Progress % and remaining print time shown. (Heating up symbol shown as the print is just starting up.)
+ 
+ ![Printer is printing](readme/example_printing.png) Printer is printing. Progress bar shown on top. Progress % and remaining print time shown.
+ 
+ ![Printer is cancelling](readme//example_on_cancelling.png) Print has been cancelled.
+ 
+ ![Printer is cooling](readme/example_on_cooling.png) Printer is cooling down.
+  
 ## Installation
 Download the latest release. Double click on the file `com.cpeuschel.octodeck.streamDeckPlugin` to install.
 
