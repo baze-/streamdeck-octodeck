@@ -176,42 +176,83 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
 };
 
 // Helper function to determine how text should be written to button.
-function updateTitleText( context ){
-    let text = "";
+function updateTitleText( context ) {
 
-    // Filename to first line
-    if ( printerStatus[context].filename == null ){
-        text += "";
-    } else {
-        text += printerStatus[context].filename.substring(0, 8) + "\n";
+    // Set empty title text
+    octoDeckAction.SetTitle(context, "");
+
+    // Draw dynamic progress bar to button
+    let width = Math.floor(printerStatus[context].progress / 100 * 110); // Scale percent progress to 120px width.
+    let img = 'data:image/svg+xml;charset=utf8,';
+    //let img += '<svg height="144" width="144"><rect x="17" y="8" width="'+width+'" height="10" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" /><rect x="17" y="8" width="110" height="10" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" /></svg>';
+
+    // Create progress bar
+    img += '<svg height="144" width="144">' +
+        '<style> text { font-family:Roboto-Regular,Roboto; font-weight: bold } </style>';
+
+    // Add progress bar if we are printing.
+    if (printerStatus[context].status == "printing") {
+        img +=
+            '<rect x="17" y="8" width="' + width + '" height="15" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" />' +
+            '<rect x="17" y="8" width="110" height="15" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" />';
     }
 
-    // Printer status to SECOND line
-    if ( printerStatus[context].status ){
+    // Show filename
+    if ( printerStatus[context].filename != null && printerStatus[context].filename.length > 4 )
+    img += '<text x="6" y="45" fill="white" text-anchor="begin">' +
+        '   <tspan font-size="23">' + printerStatus[context].filename.substring(0, 11) + '</tspan>' +
+        '</text>';
 
-        if ( printerStatus[context].status == "printing" ){
-            // Printer is printing. Show progress percentage and time.
-            text += printerStatus[context].progress + "% ";
-            text += Math.floor(printerStatus[context].timeRemaining/60)+"min";
-        } else if ( printerStatus[context].status == "on" ) {
+    // Show "On", "Off" or progress "40% 30min" when printing.
+    if (printerStatus[context].status == "on" || printerStatus[context].status == "printing" || printerStatus[context].status == "cancel") {
 
-            // If
-            if ( printerStatus[context].hotend - printerStatus[context].hotendTarget <= -10 ) text = "Heating";
-            else if ( printerStatus[context].hotend - printerStatus[context].hotendTarget >= 10 ) text = "Cooling";
-            else text = "On";
+        if (printerStatus[context].status == "printing" || printerStatus[context].status == "on") {
+
+            // More detailed status about heating when printer is On but not printing.
+            if (printerStatus[context].hotend - printerStatus[context].hotendTarget <= -10) {
+                // Show heating-text and up arrow
+                img += '<text x="10" y="125" font-size="35" fill="rgb(255,150,150)">↥</text>';
+
+                if (printerStatus[context].status == "on") img += '<text x="72" y="82" fill="white" text-anchor="middle" font-size="35"> Heating </text>';
+            } else if (printerStatus[context].hotend - printerStatus[context].hotendTarget >= 10 && printerStatus[context].hotend > 32) {
+                // Show cooling-text and down arrow
+                img += '<text x="10" y="125" font-size="35" fill="rgb(100,100,255)">↧</text>';
+
+                if (printerStatus[context].status == "on") img += '<text x="72" y="82" fill="white" text-anchor="middle" font-size="35"> Cooling </text>';
+            } else {
+                // Just show "On" text
+                if (printerStatus[context].status == "on") {
+                    img += '<text x="72" y="82" fill="white" text-anchor="middle"> <tspan font-size="35"> On </tspan> </text>';
+                }
+            }
+
+            if ( printerStatus[context].status == "printing" ){
+                    img += '<text x="5" y="82" fill="white" text-anchor="begin"> <tspan font-size="35">' + printerStatus[context].progress + '</tspan><tspan dy="-8" font-size="20" fill="rgb(200,200,200">%</tspan> </text>';
+                    img += '<text x="135" y="82" fill="white" text-anchor="end"> <tspan dx="5" font-size="30">' + printerStatus[context].timeRemaining + '</tspan><tspan dy="0" font-size="20" fill="rgb(200,200,200">min</tspan> </text>';
+            }
+
         } else if ( printerStatus[context].status == "cancel" ) {
-            text = "Cancel";
-        } else if ( printerStatus[context].status == "off" ) {
-            text =  "Off" ;
+            img += '<text x="72" y="82" fill="white" text-anchor="middle" font-size="30"> Cancelling </text>';
+        }  else {
         }
+
+        // Show temperatures
+        img += '<text x="138" y="125" font-size="30" text-anchor="end">';
+        if (printerStatus[context].hotend != null && printerStatus[context].bed != null) {
+             img += '<tspan fill="white">' + printerStatus[context].hotend + '/' + printerStatus[context].bed + '</tspan><tspan fill="rgb(220,220,220)" dy="-10" font-size="20">°C</tspan>';
+        }
+
+        img += '</text>';
+
+    } else {
+        // Printer is off
+        img += '<text x="72" y="82" fill="white" text-anchor="middle"> <tspan font-size="35"> Off </tspan> </text>';
     }
 
-    // Temperatures to THIRD line
-    if ( printerStatus[context].hotend != null && printerStatus[context].bed != null ){
-        text += "\n" + printerStatus[context].hotend + "/" + printerStatus[context].bed + " °C";
-    }
+    img +='</svg>';
 
-    octoDeckAction.SetTitle(context, text );
+    octoDeckAction.SetImage(context, img);
+
 }
 
 function fetchPrinterJobStatus( context, settings ){
@@ -231,46 +272,41 @@ function fetchPrinterJobStatus( context, settings ){
                 console.log ("printing...");
                 printerStatus[context].status = "printing";
                 printerStatus[context].progress = Math.floor(out.progress.completion);
-                printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft);
+                printerStatus[context].timeRemaining = Math.floor(out.progress.printTimeLeft/60);
                 printerStatus[context].filename = out.job.file.display;
-
-                // Draw dynamic progress bar to button
-                let width = Math.floor(printerStatus[context].progress/100*110); // Scale percent progress to 120px width.
-                let img = 'data:image/svg+xml;charset=utf8,<svg height="144" width="144"><rect x="17" y="8" width="'+width+'" height="10" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" /><rect x="17" y="8" width="110" height="10" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" /></svg>';
-                octoDeckAction.SetImage(context, img);
-
+                if ( printerStatus[context].filename == null ) printerStatus[context].filename = "";
             } else if (out.state == "Operational" ) {
                 console.log ("on...");
                 printerStatus[context].status = "on";
-                printerStatus[context].progress = null;
-                printerStatus[context].timeRemaining = null;
+                printerStatus[context].progress = 0;
+                printerStatus[context].timeRemaining = 0;
                 printerStatus[context].filename = out.job.file.display;
 
-                octoDeckAction.SetImage(context, background[settings.octoBackground]);
+                //octoDeckAction.SetImage(context, background[settings.octoBackground]);
             } else if (out.state == "Cancelling" ) {
                 printerStatus[context].status = "cancel";
-                printerStatus[context].progress = null;
-                printerStatus[context].timeRemaining = null;
+                printerStatus[context].progress = 0;
+                printerStatus[context].timeRemaining = 0;
                 printerStatus[context].filename = out.job.file.display;
 
-                octoDeckAction.SetImage(context, background[settings.octoBackground]);
+                //octoDeckAction.SetImage(context, background[settings.octoBackground]);
             } else if (out.state.search( "Offline" >= 0)) {
                 printerStatus[context].status = "off";
                 // Reset if offline
-                printerStatus[context].progress = null;
-                printerStatus[context].timeRemaining = null;
-                printerStatus[context].hotend = null;
-                printerStatus[context].bed = null;
-                printerStatus[context].filename = null;
+                printerStatus[context].progress = 0;
+                printerStatus[context].timeRemaining = 0;
+                printerStatus[context].hotend = 0;
+                printerStatus[context].bed = 0;
+                printerStatus[context].filename = "";
 
-                octoDeckAction.SetImage(context, background[settings.octoBackground]);
+                //octoDeckAction.SetImage(context, background[settings.octoBackground]);
             } else {
                 // Printer is on, but not printing.
                 printerStatus[context].status = "on";
-                printerStatus[context].progress = null;
-                printerStatus[context].timeRemaining = null;
+                printerStatus[context].progress = 0;
+                printerStatus[context].timeRemaining = 0;
                 printerStatus[context].filename = out.job.file.display;
-                octoDeckAction.SetImage(context, background[settings.octoBackground]);
+                //octoDeckAction.SetImage(context, background[settings.octoBackground]);
             }
 
             // Update button text
