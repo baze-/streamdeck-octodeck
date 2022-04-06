@@ -175,14 +175,29 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
     };
 };
 
+function round(value, precision) {
+    var multiplier = Math.pow(10, precision || 0);
+    return Math.round(value * multiplier) / multiplier;
+}
+
 // Helper function to determine how text should be written to button.
 function updateTitleText( context ) {
+    /*
+    //set true when debugging
+    if (true) {
+
+        printerStatus[context].status = "printing";
+        printerStatus[context].progress = 0;
+        printerStatus[context].timeRemaining = 220;
+        printerStatus[context].hotend = 55;
+        printerStatus[context].hotendTarget = 225;
+        printerStatus[context].bed = 34;
+    }
+*/
 
     // Set empty title text
     octoDeckAction.SetTitle(context, "");
 
-    // Draw dynamic progress bar to button
-    let width = Math.floor(printerStatus[context].progress / 100 * 110); // Scale percent progress to 120px width.
     let img = 'data:image/svg+xml;charset=utf8,';
     //let img += '<svg height="144" width="144"><rect x="17" y="8" width="'+width+'" height="10" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" /><rect x="17" y="8" width="110" height="10" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" /></svg>';
 
@@ -191,16 +206,19 @@ function updateTitleText( context ) {
         '<style> text { font-family:Roboto-Regular,Roboto; font-weight: bold } </style>';
 
     // Add progress bar if we are printing.
-    if (printerStatus[context].status == "printing") {
+    if (  printerStatus[context].status == "printing") {
+        // Draw dynamic progress bar to button
+        let width = Math.floor(printerStatus[context].progress / 100 * 136); // Scale percent progress to px width.
+
         img +=
-            '<rect x="17" y="8" width="' + width + '" height="15" style="fill:rgb(220,220,240);fill-opacity:0.7;stroke-opacity:0.9" />' +
-            '<rect x="17" y="8" width="110" height="15" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" />';
+            '<rect x="3" y="50" width="' + width + '" height="41" style="fill:rgb(100,100,180);fill-opacity:0.7;stroke-opacity:0.9" />' +
+            '<rect x="3" y="50" width="136" height="41" style="fill:blue;fill-opacity:0.2;stroke-opacity:0.9;stroke:rgb(220,220,240);stroke-width:1" />';
     }
 
     // Show filename
     if ( printerStatus[context].filename != null && printerStatus[context].filename.length > 4 )
-    img += '<text x="6" y="47" fill="white" text-anchor="begin">' +
-        '   <tspan font-size="23">' + printerStatus[context].filename.substring(0, 11) + '</tspan>' +
+    img += '<text x="6" y="37" fill="white" text-anchor="begin">' +
+        '   <tspan font-size="25">' + printerStatus[context].filename.substring(0, 10) + '</tspan>' +
         '</text>';
 
     // Show "On", "Off" or progress "40% 30min" when printing.
@@ -226,9 +244,14 @@ function updateTitleText( context ) {
                 }
             }
 
-            if ( printerStatus[context].status == "printing" ){
-                    img += '<text x="5" y="84" fill="white" text-anchor="begin"> <tspan font-size="35">' + printerStatus[context].progress + '</tspan><tspan dy="-8" font-size="20" fill="rgb(200,200,200">%</tspan> </text>';
-                    img += '<text x="135" y="84" fill="white" text-anchor="end"> <tspan dx="5" font-size="30">' + printerStatus[context].timeRemaining + '</tspan><tspan dy="0" font-size="20" fill="rgb(200,200,200">min</tspan> </text>';
+            if (  printerStatus[context].status == "printing" ){
+                img += '<text x="6" y="84" fill="white" text-anchor="begin"> <tspan font-size="35">' + printerStatus[context].progress + '</tspan><tspan dy="-8" font-size="20" fill="rgb(200,200,200">%</tspan> </text>';
+
+                    if ( printerStatus[context].timeRemaining > 90 ) {
+                        img += '<text x="135" y="84" fill="white" text-anchor="end"> <tspan dx="5" font-size="30">' + round(printerStatus[context].timeRemaining/60,1) + '</tspan><tspan dy="0" font-size="20" fill="rgb(200,200,200">h</tspan> </text>';
+                    } else {
+                        img += '<text x="138" y="84" fill="white" text-anchor="end"> <tspan dx="5" font-size="30">' + printerStatus[context].timeRemaining + '</tspan><tspan dy="0" font-size="20" fill="rgb(200,200,200">min</tspan> </text>';
+                    }
             }
 
         } else if ( printerStatus[context].status == "cancel" ) {
