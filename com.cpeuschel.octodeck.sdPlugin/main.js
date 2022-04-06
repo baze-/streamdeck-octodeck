@@ -16,8 +16,11 @@ var octoDeckAction    = {
 
     onKeyUp: function (context, settings, coordinates, userDesiredState) {
         console.log("onKeyUp context: ", context, " settings: ", settings);
+        console.log("calling url["+settings.keyPressUrl+"]");
 
-        getData(settingsCache[context], context);
+        callKeyPressUrl( context, settings );
+
+        // getData(settingsCache[context], context);
     },
 
     onWillAppear: function (context, settings, coordinates) {
@@ -81,7 +84,7 @@ var octoDeckAction    = {
         console.log("New JSON", JSON.stringify(json));
         octoDeckAction.SetImage(context, background[settings.octoBackground]);
 
-        // Start timer when new settings are received.
+        // Restart timer when new settings are received.
         resetTimer(context, settings);
     },
 
@@ -341,6 +344,36 @@ function fetchPrinterJobStatus( context, settings ){
             console.log('Invalid JSON Parsing Error');
             octoDeckAction.showAlert(context);
             printerStatus[context].status = "";
+        });
+
+}
+
+function callKeyPressUrl( context, settings ){
+    fetch(settings.keyPressUrl , {
+        // headers: { 'X-Api-Key': settings.keyPressHeader}
+    })
+        .then((res)=>{
+                // If request succeeded, then return data
+                if(res.ok) {
+                    return res.text();
+                } else if (res.status >= 400 && res.status < 500 ){
+                    console.log('Access denied. ');
+                    throw new Error("keypress url failed with code :" + res.status);
+                } else {
+                    throw new Error("Status code error :" + res.status);
+                }
+            }
+        )
+        .catch(err => {
+            console.log('Invalid API Response Error');
+            octoDeckAction.showAlert(context);
+        })
+        .then((out) => {
+            console.log('Received keypressJSON[',context,']', out);
+        })
+        .catch(err => {
+            console.log('Invalid JSON Parsing Error');
+            octoDeckAction.showAlert(context);
         });
 
 }
