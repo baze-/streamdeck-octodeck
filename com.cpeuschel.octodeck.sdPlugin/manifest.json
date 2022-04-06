@@ -22,7 +22,7 @@
     "Name": "OctoDeck",
     "Icon": "resources/pluginIcon",
     "PropertyInspectorPath": "propertyinspector.html",
-    "Version": "2.1.0",
+    "Version": "2.1.1",
     "OS": [
         {
             "Platform": "mac",
